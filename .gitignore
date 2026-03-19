@@ -77,3 +77,7 @@ client_secret.json
 /app/mailsync.dSYM
 .idea
 .claude/worktrees/
+
+pkg
+mailspring-optimized-*
+PKGBUILD
