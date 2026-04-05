@@ -25,6 +25,13 @@ Current / Intended Behavior:
 class SystemTrayIconStore {
   _windowBackgrounded = false;
   _unsubscribers: (() => void)[];
+  // PERF FIX #4: memoize last sent values so ipcRenderer.send only fires
+  // when the tray icon or badge count actually changes.
+  _lastSentIconPath: string = null;
+  _lastSentCount: string = null;
+  _lastSentIsTemplate: boolean = null;
+  // PERF FIX #5: store handler ref so it can be removed in deactivate()
+  _nativeThemeHandler: () => void = null;
 
   activate() {
     this._updateIcon();
@@ -42,14 +49,20 @@ class SystemTrayIconStore {
       window.removeEventListener('browser-window-blur', this._onWindowBackgrounded);
     });
 
-    // If the theme changes from bright to dark mode or vice versa, we need to update the tray icon
-    nativeTheme.on('updated', () => {
+    // PERF FIX #5: Store the handler reference so it can be removed in deactivate()
+    this._nativeThemeHandler = () => {
       this._updateIcon();
-    });
+    };
+    nativeTheme.on('updated', this._nativeThemeHandler);
   }
 
   deactivate() {
     this._unsubscribers.forEach((unsub) => unsub());
+    // PERF FIX #5: Remove the listener when the package is deactivated
+    if (this._nativeThemeHandler) {
+      nativeTheme.removeListener('updated', this._nativeThemeHandler);
+      this._nativeThemeHandler = null;
+    }
   }
 
   _onWindowBackgrounded = () => {
@@ -140,6 +153,21 @@ class SystemTrayIconStore {
         }
       }
     }
+
+    // PERF FIX #4: Only send IPC messages when something has actually changed.
+    // BadgeStore triggers frequently, but often with the same data.
+    if (
+      this._lastSentIconPath === icon.path &&
+      this._lastSentCount === unreadString &&
+      this._lastSentIsTemplate === icon.isTemplateImg
+    ) {
+      return;
+    }
+
+    this._lastSentIconPath = icon.path;
+    this._lastSentCount = unreadString;
+    this._lastSentIsTemplate = icon.isTemplateImg;
+
     ipcRenderer.send('update-system-tray', icon.path, unreadString, icon.isTemplateImg);
   };
 }
