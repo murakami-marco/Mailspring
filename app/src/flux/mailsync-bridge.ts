@@ -387,6 +387,9 @@ export default class MailsyncBridge {
   }
 
   _onIncomingMessages = msgs => {
+    const rebroadcastBatch = [];
+    const groupedChanges: { [key: string]: { type: string, modelClass: string, modelJSONs: any[] } } = {};
+
     for (const msg of msgs) {
       if (msg.length === 0) {
         continue;
@@ -423,13 +426,27 @@ export default class MailsyncBridge {
         continue;
       }
 
-      // dispatch the message to other windows
-      ipcRenderer.send('mailsync-bridge-rebroadcast-to-all', msg);
+      // dispatch the message to other windows - collect in a batch
+      rebroadcastBatch.push(msg);
 
+      // Group these models by class and type to trigger fewer DatabaseStore events
+      const groupKey = `${modelClass}:${type}`;
+      if (!groupedChanges[groupKey]) {
+        groupedChanges[groupKey] = { type, modelClass, modelJSONs: [] };
+      }
+      groupedChanges[groupKey].modelJSONs.push(...modelJSONs);
+    }
+
+    if (rebroadcastBatch.length > 0) {
+      ipcRenderer.send('mailsync-bridge-rebroadcast-all-v2', rebroadcastBatch);
+    }
+
+    for (const key of Object.keys(groupedChanges)) {
+      const { type, modelClass, modelJSONs } = groupedChanges[key];
       const models = modelJSONs.map(Utils.convertToModel);
       this._onIncomingChangeRecord(
         new DatabaseChangeRecord({
-          type, // TODO BG move to "model" naming style, finding all uses might be tricky
+          type,
           objectClass: modelClass,
           objects: models,
           objectsRawJSON: modelJSONs,
@@ -437,6 +454,7 @@ export default class MailsyncBridge {
       );
     }
   };
+
 
   _onIncomingChangeRecord = (record: DatabaseChangeRecord<Model>) => {
     // Allow observers of the database to handle this change
@@ -459,17 +477,35 @@ export default class MailsyncBridge {
     }
   };
 
-  _onIncomingRebroadcastMessage = (event, msg) => {
-    const { type, modelJSONs, modelClass } = JSON.parse(msg);
-    const models = modelJSONs.map(Utils.convertToModel);
-    DatabaseStore.trigger(
-      new DatabaseChangeRecord({
-        type,
-        objectClass: modelClass,
-        objects: models,
-        objectsRawJSON: modelJSONs,
-      })
-    );
+  _onIncomingRebroadcastMessage = (event, msgsBatch) => {
+    if (!Array.isArray(msgsBatch)) {
+      msgsBatch = [msgsBatch]; // Backwards compatibility for single-message rebroadcasts
+    }
+
+    const groupedChanges: { [key: string]: { type: string, modelClass: string, modelJSONs: any[] } } = {};
+
+    for (const msg of msgsBatch) {
+      if (typeof msg !== 'string') continue;
+      const { type, modelJSONs, modelClass } = JSON.parse(msg);
+      const groupKey = `${modelClass}:${type}`;
+      if (!groupedChanges[groupKey]) {
+        groupedChanges[groupKey] = { type, modelClass, modelJSONs: [] };
+      }
+      groupedChanges[groupKey].modelJSONs.push(...modelJSONs);
+    }
+
+    for (const key of Object.keys(groupedChanges)) {
+      const { type, modelClass, modelJSONs } = groupedChanges[key];
+      const models = modelJSONs.map(Utils.convertToModel);
+      DatabaseStore.trigger(
+        new DatabaseChangeRecord({
+          type,
+          objectClass: modelClass,
+          objects: models,
+          objectsRawJSON: modelJSONs,
+        })
+      );
+    }
   };
 
   _onFetchBodies(messages) {

@@ -20,10 +20,45 @@ export class Notifier {
   hasScheduledNotify = false;
   unlisteners: Array<() => void>;
   activeNotifications = {};
+  _changeBuffer: DatabaseChangeRecord<any>[] = [];
 
   constructor() {
     this.unlisteners = [DatabaseStore.listen(this._onDatabaseChanged, this)];
   }
+
+  _onDatabaseChanged = (record: DatabaseChangeRecord<any>) => {
+    this._changeBuffer.push(record);
+    this._processChangeBuffer();
+  }
+
+
+  _processChangeBuffer = _.debounce(async () => {
+    const buffer = this._changeBuffer;
+    this._changeBuffer = [];
+
+    const threadObjects = [];
+    const messageObjects = [];
+    const messageNewIds = new Set<string>();
+
+    for (const { objectClass, objects, objectsRawJSON } of buffer) {
+      if (objectClass === Thread.name) {
+        threadObjects.push(...objects);
+      } else if (objectClass === Message.name) {
+        messageObjects.push(...objects);
+        for (const json of (objectsRawJSON || [])) {
+          if (json.headersSyncComplete) messageNewIds.add(json.id);
+        }
+      }
+    }
+
+    if (threadObjects.length > 0) {
+      this._onThreadsChanged(threadObjects);
+    }
+    if (messageObjects.length > 0) {
+      await this._onMessagesChanged(messageObjects, messageNewIds);
+    }
+  }, 250);
+
 
   unlisten() {
     for (const unlisten of this.unlisteners) {
@@ -31,25 +66,7 @@ export class Notifier {
     }
   }
 
-  // async for testing
-  async _onDatabaseChanged({ objectClass, objects, objectsRawJSON }: DatabaseChangeRecord<any>) {
-    if (AppEnv.config.get('core.notifications.enabled') === false) {
-      return;
-    }
 
-    if (objectClass === Thread.name) {
-      this._onThreadsChanged(objects);
-    }
-
-    if (objectClass === Message.name) {
-      const newIds = new Set<string>();
-      for (const json of objectsRawJSON) {
-        if (json.headersSyncComplete) newIds.add(json.id);
-      }
-      if (!newIds.size) return;
-      this._onMessagesChanged(objects, newIds);
-    }
-  }
 
   // async for testing
   async _onMessagesChanged(msgs, newIds: Set<string>) {
@@ -104,14 +121,17 @@ export class Notifier {
   }
 
   _onThreadsChanged(threads) {
+    if (Object.keys(this.activeNotifications).length === 0) return;
+
     // Ensure notifications are dismissed when the user reads a thread
-    threads.forEach(({ id, unread }) => {
+    for (const { id, unread } of threads) {
       if (!unread && this.activeNotifications[id]) {
         this.activeNotifications[id].forEach((n) => n.close());
         delete this.activeNotifications[id];
       }
-    });
+    }
   }
+
 
   async _notifyAll() {
     // Extract unique sender names from the queue

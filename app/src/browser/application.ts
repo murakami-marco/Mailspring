@@ -663,6 +663,12 @@ export default class Application extends EventEmitter {
       this.windowManager.sendToAllWindows('mailsync-bridge-message', { except: win }, ...args);
     });
 
+    ipcMain.on('mailsync-bridge-rebroadcast-all-v2', (event, msgsBatch) => {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      this.windowManager.sendToAllWindows('mailsync-bridge-message', { except: win }, msgsBatch);
+    });
+
+
     ipcMain.on('action-bridge-rebroadcast-to-all', (event, ...args) => {
       const win = BrowserWindow.fromWebContents(event.sender);
       this.windowManager.sendToAllWindows('action-bridge-message', { except: win }, ...args);
