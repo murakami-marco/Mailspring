@@ -1,7 +1,8 @@
 {
   "name": "mailspring",
   "productName": "Mailspring Optimized",
-  "version": "1.19.1-optimized",
+  "version": "1.19.2-optimized",
+
   "repository": {
     "type": "git",
     "url": "git://github.com/foundry376/mailspring.git"
