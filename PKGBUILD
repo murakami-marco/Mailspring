@@ -1,6 +1,6 @@
 # Maintainer: Marco <marco@example.com>
 pkgname=mailspring-optimized
-pkgver=1.19.1.optimized
+pkgver=1.19.2.optimized
 pkgrel=1
 pkgdesc="Mailspring optimized with CPU fix (Local Build)"
 arch=('x86_64')
