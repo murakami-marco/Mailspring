@@ -301,6 +301,7 @@ exports.handleSquirrelInstall = app => {
     iconIndex: 0,
     description: 'The best email app for people and teams at work',
     appUserModelId: 'com.squirrel.mailspring.mailspring',
+    toastActivatorClsid: '{E6AD16B0-2830-48E7-9DB7-439152FA917B}',
   };
 
   try {

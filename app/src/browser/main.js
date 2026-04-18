@@ -16,7 +16,7 @@ if (typeof process.setFdLimit === 'function') {
   process.setFdLimit(1024);
 }
 
-const setupConfigDir = (args) => {
+const setupConfigDir = args => {
   let dirname = 'Mailspring';
   if (args.devMode) {
     dirname = 'Mailspring-dev';
@@ -42,7 +42,7 @@ const setupConfigDir = (args) => {
   return configDirPath;
 };
 
-const setupCompileCache = (configDirPath) => {
+const setupCompileCache = configDirPath => {
   const compileCache = require('../compile-cache');
   return compileCache.setHomeDirectory(configDirPath);
 };
@@ -59,13 +59,16 @@ const setupErrorLogger = (args = {}) => {
   return errorLogger;
 };
 
-const declareOptions = (argv) => {
+const declareOptions = argv => {
   const optimist = require('optimist');
   const options = optimist(argv);
   options.usage(
     `Mailspring\n\nUsage: mailspring [options] [recipient] [attachment]\n\nRun Mailspring: The open source extensible email client\n\n\`mailspring mailto:johndoe@example.com\` to compose an e-mail to johndoe@example.com.\n\`mailspring ./attachment.txt\` to compose an e-mail with a text file attached.\n\`mailspring --dev\` to start the client in dev mode.\n\`mailspring --test\` to run unit tests.`
   );
-  options.alias('d', 'dev').boolean('d').describe('d', 'Run in development mode.');
+  options
+    .alias('d', 'dev')
+    .boolean('d')
+    .describe('d', 'Run in development mode.');
   options
     .alias('t', 'test')
     .boolean('t')
@@ -82,8 +85,14 @@ const declareOptions = (argv) => {
   options.boolean('enable-crashpad');
   options.boolean('allow-file-access-from-files');
   options.boolean('source-app-id');
-  options.alias('h', 'help').boolean('h').describe('h', 'Print this usage message.');
-  options.alias('l', 'log-file').string('l').describe('l', 'Log all test output to file.');
+  options
+    .alias('h', 'help')
+    .boolean('h')
+    .describe('h', 'Print this usage message.');
+  options
+    .alias('l', 'log-file')
+    .string('l')
+    .describe('l', 'Log all test output to file.');
   options
     .alias('c', 'config-dir-path')
     .string('c')
@@ -99,12 +108,18 @@ const declareOptions = (argv) => {
       'f',
       'Override the default file regex to determine which tests should run (defaults to "-spec.(js|jsx|es6|es)$" )'
     );
-  options.alias('v', 'version').boolean('v').describe('v', 'Print the version.');
-  options.alias('b', 'background').boolean('b').describe('b', 'Start Mailspring in the background');
+  options
+    .alias('v', 'version')
+    .boolean('v')
+    .describe('v', 'Print the version.');
+  options
+    .alias('b', 'background')
+    .boolean('b')
+    .describe('b', 'Start Mailspring in the background');
   return options;
 };
 
-const parseCommandLine = (argv) => {
+const parseCommandLine = argv => {
   const pkg = require('../../package.json');
   const version = `${pkg.version}-${pkg.commitHash}`;
 
@@ -191,7 +206,7 @@ const parseCommandLine = (argv) => {
   };
 };
 
-const extractMailtoLink = (mailtoLink) => {
+const extractMailtoLink = mailtoLink => {
   console.log(mailtoLink);
 
   // Handle links in the form mailto:test@example.com?attach=file:///path/to/file.txt
@@ -277,9 +292,8 @@ const start = () => {
     // into the Start Menu shortcut. Without this, action/reply notification
     // events are silently dropped (COM server is never registered).
     app.setToastActivatorCLSID('{E6AD16B0-2830-48E7-9DB7-439152FA917B}');
+    app.setAppUserModelId('com.squirrel.mailspring.mailspring');
   }
-
-  app.setAppUserModelId('com.squirrel.mailspring.mailspring');
 
   // Set the app name explicitly for Linux to ensure the system tray icon
   // gets a unique ID. Without this, all Electron apps share the same
@@ -381,7 +395,7 @@ const start = () => {
           .replace('app.asar', 'app.asar.unpacked'),
         { allowFileAccess: true }
       )
-      .catch((err) => console.error(`Error loading language detection extension: ${err}`));
+      .catch(err => console.error(`Error loading language detection extension: ${err}`));
 
     session.defaultSession.webRequest.onBeforeSendHeaders(o365Filter, (details, callback) => {
       delete details.requestHeaders['Origin'];
@@ -406,9 +420,8 @@ const start = () => {
     });
 
     // eslint-disable-next-line
-    const Application = require(
-      path.join(options.resourcePath, 'src', 'browser', 'application')
-    ).default;
+    const Application = require(path.join(options.resourcePath, 'src', 'browser', 'application'))
+      .default;
     global.application = new Application();
     global.application.start(options);
 

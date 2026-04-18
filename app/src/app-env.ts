@@ -138,7 +138,9 @@ export default class AppEnvConstructor {
 
     // Shortcut phased out in April 2026, remove in June/July 2026
     if (this.isMainWindow() && process.platform === 'win32') {
-      this.fixStaleWin32LaunchOnSystemStart();
+      setTimeout(() => {
+        this.fixStaleWin32LaunchOnSystemStart();
+      }, 1000);
     }
   }
 
@@ -166,7 +168,8 @@ export default class AppEnvConstructor {
     if (exists) {
       fs.unlink(shortcutPath, () => {});
       const { SystemStartService } = require('mailspring-exports');
-      SystemStartService.configureToLaunchOnSystemStart();
+      const service = new SystemStartService();
+      service.configureToLaunchOnSystemStart();
     }
   }
   // This ties window.onerror and process.uncaughtException,handledRejection
