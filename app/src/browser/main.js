@@ -24,10 +24,10 @@ const setupConfigDir = args => {
   if (args.specMode) {
     dirname = 'Mailspring-spec';
   }
-  
+
   // Check if a custom config dir was provided via --config-dir-path
   let configDirPath = args.configDirPath || path.join(app.getPath('appData'), dirname);
-  
+
   if (process.platform === 'linux' && process.env.SNAP) {
     // for linux snap, use the sandbox directory that is persisted between snap revisions
     configDirPath = args.configDirPath || process.env.SNAP_USER_COMMON;
@@ -287,7 +287,13 @@ const handleStartupEventWithSquirrel = () => {
 };
 
 const start = () => {
-  app.setAppUserModelId('com.squirrel.mailspring.mailspring');
+  if (process.platform === 'win32') {
+    // Must be set before setAppUserModelId so RegisterActivator writes it
+    // into the Start Menu shortcut. Without this, action/reply notification
+    // events are silently dropped (COM server is never registered).
+    app.setToastActivatorCLSID('{E6AD16B0-2830-48E7-9DB7-439152FA917B}');
+    app.setAppUserModelId('com.squirrel.mailspring.mailspring');
+  }
 
   // Set the app name explicitly for Linux to ensure the system tray icon
   // gets a unique ID. Without this, all Electron apps share the same
@@ -331,6 +337,15 @@ const start = () => {
   global.errorLogger = setupErrorLogger(options);
   const configDirPath = setupConfigDir(options);
   options.configDirPath = configDirPath;
+
+  // On macOS, setLoginItemSettings doesn't support passing custom args, so we
+  // detect login-item launches via wasOpenedAtLogin and start in background.
+  if (process.platform === 'darwin' && !options.background) {
+    const settings = app.getLoginItemSettings();
+    if (settings.wasOpenedAtLogin) {
+      options.background = true;
+    }
+  }
 
   if (!options.devMode) {
     const gotTheLock = app.requestSingleInstanceLock();

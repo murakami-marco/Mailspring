@@ -291,7 +291,9 @@ export class ListTabular extends Component<ListTabularProps, ListTabularState> {
     this._unlisten = dataSource.listen(() => this.setState(this.buildStateForRange()));
 
     const range = this.getRange();
-    this.props.dataSource.setRetainedRange(range);
+    if (range) {
+      this.props.dataSource.setRetainedRange(range);
+    }
     this.setState(this.buildStateForRange({ ...range, dataSource }));
   }
 
@@ -357,10 +359,12 @@ export class ListTabular extends Component<ListTabularProps, ListTabularState> {
 
   updateRangeStateIfViewportChanged() {
     const range = this.getRange();
+    if (!range) {
+      return;
+    }
 
     // Final sanity check to prevent needless work
     if (
-      !range ||
       range.end !== this.state.renderedRangeEnd ||
       range.start !== this.state.renderedRangeStart
     ) {
