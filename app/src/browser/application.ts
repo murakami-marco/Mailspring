@@ -144,13 +144,13 @@ export default class Application extends EventEmitter {
       initializeInBackground: initializeInBackground,
     });
     this.systemTrayManager = new SystemTrayManager(process.platform, this);
-    this.systemAccentWatcher = new SystemAccentWatcher();
-    this.systemAccentWatcher.on('change', color => {
-      this.windowManager.sendToAllWindows('system-accent-color-changed', {}, color);
-    });
-    this.systemAccentWatcher.on('dark-mode-change', darkMode => {
-      this.windowManager.sendToAllWindows('system-dark-mode-changed', {}, darkMode);
-    });
+    // this.systemAccentWatcher = new SystemAccentWatcher();
+    // this.systemAccentWatcher.on('change', color => {
+    //   this.windowManager.sendToAllWindows('system-accent-color-changed', {}, color);
+    // });
+    // this.systemAccentWatcher.on('dark-mode-change', darkMode => {
+    //   this.windowManager.sendToAllWindows('system-dark-mode-changed', {}, darkMode);
+    // });
     if (process.platform === 'darwin') {
       this.touchBar = new ApplicationTouchBar(resourcePath);
     }
@@ -426,13 +426,13 @@ export default class Application extends EventEmitter {
       }
     });
 
-    this.on('application:show-calendar', () => {
-      this.windowManager.ensureWindow(WindowManager.CALENDAR_WINDOW, {});
-      const main = this.windowManager.get(WindowManager.MAIN_WINDOW);
-      if (main) {
-        main.sendMessage('run-calendar-sync');
-      }
-    });
+    // this.on('application:show-calendar', () => {
+    //   this.windowManager.ensureWindow(WindowManager.CALENDAR_WINDOW, {});
+    //   const main = this.windowManager.get(WindowManager.MAIN_WINDOW);
+    //   if (main) {
+    //     main.sendMessage('run-calendar-sync');
+    //   }
+    // });
 
     this.on('application:show-contacts', () => {
       this.windowManager.ensureWindow(WindowManager.CONTACTS_WINDOW, {});

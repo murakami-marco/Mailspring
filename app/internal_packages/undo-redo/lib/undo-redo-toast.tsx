@@ -9,7 +9,7 @@ import {
 } from 'mailspring-exports';
 import { RetinaImg } from 'mailspring-component-kit';
 import { CSSTransitionGroup } from 'react-transition-group';
-import { PLUGIN_ID } from '../../../internal_packages/send-later/lib/send-later-constants';
+import { PLUGIN_ID } from '../../send-later/lib/send-later-constants';
 
 function isUndoSend(block) {
   return (

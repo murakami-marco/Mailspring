@@ -193,7 +193,7 @@ class MessageBodyProcessor {
   }
 
   _addToCache(key, { body, clipped }) {
-    if (this._recentlyProcessedA.length > 50) {
+    if (this._recentlyProcessedA.length > 20) {
       const removed = this._recentlyProcessedA.pop();
       delete this._recentlyProcessedD[removed.key];
     }

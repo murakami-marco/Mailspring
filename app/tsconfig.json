@@ -18,6 +18,6 @@
       "*": ["node_modules/*", "src/global/*"]
     }
   },
-  "include": ["src/**/*", "internal_packages/**/*", "spec/**/*"],
+  "include": ["src/**/*", "internal_packages/**/*", "spec/**/*", "internal_packages/send-later", "internal_packages_disabled/translation", "internal_packages_disabled/github-contact-card", "internal_packages_disabled/personal-level-indicators", "internal_packages_disabled/send-reminders", "internal_packages_disabled/main-calendar"],
   "exclude": ["spec/spec-runner/jasmine.js"]
 }

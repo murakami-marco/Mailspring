@@ -288,7 +288,20 @@ export class ListTabular extends Component<ListTabularProps, ListTabularState> {
 
   setupDataSource(dataSource) {
     this._unlisten();
-    this._unlisten = dataSource.listen(() => this.setState(this.buildStateForRange()));
+
+    // We throttle the setState to avoid massive CPU spikes when many DB change
+    // records arrive in quick succession (e.g. deleting 5 emails quickly).
+    // The leading edge ensures the first deletion is instant, and the trailing
+    // edge ensures we eventually show the final state.
+    const throttledUpdate = _.throttle(
+      () => {
+        this.setState(this.buildStateForRange());
+      },
+      100,
+      { leading: true, trailing: true }
+    );
+
+    this._unlisten = dataSource.listen(throttledUpdate);
 
     const range = this.getRange();
     if (range) {

@@ -1,5 +1,14 @@
 # Mailspring Changelog
 
+## 1.20.2-optimized (5/6/2026)
+
+Improvements:
+
+- Optimized `Thread::afterSave` database operations by replacing expensive `DELETE`/`INSERT` cycles with targeted `UPDATE` queries on the `ThreadCategory` table.
+- Significantly reduced CPU spikes and database I/O pressure during bulk email deletion or folder moves.
+- Added a 100ms backoff in the `mailsync` main loop when the input stream is lost, preventing high CPU usage from orphaned processes.
+- Updated ui-dark theme accent color to match ui-light.
+
 ## 1.20.1 (4/20/2026)
 
 Fixes:

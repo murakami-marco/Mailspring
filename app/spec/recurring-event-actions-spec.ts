@@ -13,7 +13,7 @@ import {
   createOccurrenceException,
   modifyAllOccurrences,
   modifyEventWithRecurringSupport,
-} from '../internal_packages/main-calendar/lib/core/recurring-event-actions';
+} from '../internal_packages_disabled/main-calendar/lib/core/recurring-event-actions';
 
 // ---------------------------------------------------------------------------
 // Minimal ICS fixtures
