@@ -1,6 +1,6 @@
-# Maintainer: Marco <marco@example.com>
+# Maintainer: Marco <[EMAIL_ADDRESS]>
 pkgname=mailspring-optimized
-pkgver=1.19.0.optimized
+pkgver=1.20.2.optimized
 pkgrel=1
 pkgdesc="Mailspring optimized with CPU fix (Local Build)"
 arch=('x86_64')
@@ -18,6 +18,14 @@ package() {
   if [ ! -d "$_src_dir" ]; then
     error "Dist directory not found. Please run 'npm run build' first."
     return 1
+  fi
+
+  # Ensure mailsync.bin is a real file and not a symlink
+  if [ -L "$_src_dir/resources/app.asar.unpacked/mailsync.bin" ]; then
+    msg2 "Dereferencing mailsync.bin symlink..."
+    local _ms_real=$(readlink -f "$_src_dir/resources/app.asar.unpacked/mailsync.bin")
+    rm "$_src_dir/resources/app.asar.unpacked/mailsync.bin"
+    cp "$_ms_real" "$_src_dir/resources/app.asar.unpacked/mailsync.bin"
   fi
 
   msg2 "Installing application files..."

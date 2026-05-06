@@ -70,21 +70,21 @@ export default class ThemeManager {
     AppEnv.config.onDidChange(CONFIG_THEME_KEY, () => this.updateThemePackageAndRecomputeLESS());
     AppEnv.config.onDidChange(CONFIG_USE_SYSTEM_ACCENT_KEY, () => this.applySystemAccent());
 
-    ipcRenderer.on('system-accent-color-changed', (_event, color: string | null) => {
-      this._systemAccentColor = color;
-      this.applySystemAccent();
-    });
+    // ipcRenderer.on('system-accent-color-changed', (_event, color: string | null) => {
+    //   this._systemAccentColor = color;
+    //   this.applySystemAccent();
+    // });
     ipcRenderer.invoke('get-system-accent-color').then((color: string | null) => {
       this._systemAccentColor = color;
       this.applySystemAccent();
     });
 
-    ipcRenderer.on('system-dark-mode-changed', (_event, darkMode: boolean) => {
-      this._systemDarkMode = !!darkMode;
-      if (this.isAutomaticModeSelected()) {
-        this.updateThemePackageAndRecomputeLESS();
-      }
-    });
+    // ipcRenderer.on('system-dark-mode-changed', (_event, darkMode: boolean) => {
+    //   this._systemDarkMode = !!darkMode;
+    //   if (this.isAutomaticModeSelected()) {
+    //     this.updateThemePackageAndRecomputeLESS();
+    //   }
+    // });
   }
 
   // New users (no `core.theme` saved in config) default to automatic mode so

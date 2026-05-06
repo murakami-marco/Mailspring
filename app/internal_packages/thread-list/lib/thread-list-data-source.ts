@@ -33,16 +33,14 @@ const _flatMapJoiningMessages = $threadsResultSet => {
     $threadsResultSet
       .flatMapLatest(threadsResultSet => {
         const missingIds = threadsResultSet.ids().filter(id => !$messagesResultSets[id]);
-        let promise = null;
         if (missingIds.length === 0) {
-          promise = Promise.resolve([threadsResultSet, []]);
-        } else {
-          promise = DatabaseStore.findAll<Message>(Message, { threadId: missingIds }).then(
-            messages => {
-              return Promise.resolve([threadsResultSet, messages]);
-            }
-          );
+          return Rx.Observable.just([threadsResultSet, []]);
         }
+        const promise = DatabaseStore.findAll<Message>(Message, { threadId: missingIds }).then(
+          messages => {
+            return [threadsResultSet, messages];
+          }
+        );
         return Rx.Observable.fromPromise(promise);
       })
       // 3. when that finishes, we group the loaded messsages by threadId and create
