@@ -29,7 +29,7 @@ class ConditionalQuotedTextControl extends React.Component<{ body: string; onCli
     onClick: PropTypes.func,
   };
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps: { body: string; onClick?: () => void }) {
     return this.props.body !== nextProps.body;
   }
 
@@ -69,7 +69,7 @@ export default class MessageItemBody extends React.Component<
   _mounted = false;
   _unsub: () => void;
 
-  constructor(props, context) {
+  constructor(props: MessageItemBodyProps, context: object) {
     super(props, context);
 
     const cached = MessageBodyProcessor.retrieveCached(props.message);
@@ -144,8 +144,8 @@ export default class MessageItemBody extends React.Component<
 
     // Replace cid: references with the paths to downloaded files
     this.props.message.files
-      .filter(f => f.contentId)
-      .forEach(file => {
+      .filter((f) => f.contentId)
+      .forEach((file) => {
         const download = this.props.downloads[file.id];
         const safeContentId = Utils.escapeRegExp(file.contentId);
 
@@ -160,9 +160,11 @@ export default class MessageItemBody extends React.Component<
           // Render a spinner
           merged = merged.replace(inlineImgRegexp, () => SpinnerImg);
         } else {
-          merged = merged.replace(inlineImgRegexp, match =>
-            match.replace(`cid:${file.contentId}`, `file://${AttachmentStore.pathForFile(file)}`)
-          );
+          merged = merged.replace(inlineImgRegexp, (match) => {
+            const filePath = AttachmentStore.pathForFile(file);
+            if (!filePath) return match;
+            return match.replace(`cid:${file.contentId}`, `file://${filePath}`);
+          });
         }
       });
 

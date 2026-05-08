@@ -1,5 +1,5 @@
 import React from 'react';
-import { PropTypes, Utils } from 'mailspring-exports';
+import { PropTypes, Utils, Contact } from 'mailspring-exports';
 import { AccountColorBar } from 'mailspring-component-kit';
 import { ThreadWithMessagesMetadata } from './types';
 
@@ -8,7 +8,7 @@ class ThreadListParticipants extends React.Component<{ thread: ThreadWithMessage
 
   static propTypes = { thread: PropTypes.object.isRequired };
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps: { thread: ThreadWithMessagesMetadata }) {
     if (nextProps.thread === this.props.thread) {
       return false;
     }
@@ -25,12 +25,12 @@ class ThreadListParticipants extends React.Component<{ thread: ThreadWithMessage
     );
   }
 
-  renderSpans(items) {
+  renderSpans(items: Array<{ spacer?: boolean; contact?: Contact; unread?: boolean }>) {
     const spans = [];
     let accumulated = null;
     let accumulatedUnread = false;
 
-    const flush = function() {
+    const flush = function () {
       if (accumulated) {
         spans.push(
           <span key={spans.length} className={`unread-${accumulatedUnread}`}>
@@ -42,7 +42,7 @@ class ThreadListParticipants extends React.Component<{ thread: ThreadWithMessage
       accumulatedUnread = false;
     };
 
-    const accumulate = function(text, unread?: boolean) {
+    const accumulate = function (text, unread?: boolean) {
       if (accumulated && unread && accumulatedUnread !== unread) {
         flush();
       }
@@ -96,7 +96,7 @@ class ThreadListParticipants extends React.Component<{ thread: ThreadWithMessage
     const tokens = [];
 
     let field = 'from';
-    if (messages.every(message => message.isFromMe())) {
+    if (messages.every((message) => message.isFromMe())) {
       field = 'to';
     }
 
@@ -131,8 +131,8 @@ class ThreadListParticipants extends React.Component<{ thread: ThreadWithMessage
 
   getTokensFromParticipants = () => {
     let contacts = this.props.thread.participants != null ? this.props.thread.participants : [];
-    contacts = contacts.filter(contact => !contact.isMe());
-    return contacts.map(contact => ({ contact, unread: false }));
+    contacts = contacts.filter((contact) => !contact.isMe());
+    return contacts.map((contact) => ({ contact, unread: false }));
   };
 
   getTokens = () => {

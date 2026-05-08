@@ -4,12 +4,11 @@ import { CSSTransitionGroup } from 'react-transition-group';
 import PropTypes from 'prop-types';
 
 type MultiselectToolbarProps = {
-  toolbarElement: JSX.Element,
-  collection: string,
-  onClearSelection: (...args: any[]) => any,
-  selectionCount: number
+  toolbarElement: JSX.Element;
+  collection: string;
+  onClearSelection: (...args: any[]) => any;
+  selectionCount: number;
 };
-
 
 /*
  * MultiselectToolbar renders a toolbar inside a horizontal bar and displays
@@ -30,7 +29,7 @@ class MultiselectToolbar extends Component<MultiselectToolbarProps> {
     selectionCount: PropTypes.node,
   };
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps: MultiselectToolbarProps, nextState: Record<string, unknown>) {
     return !Utils.isEqualReact(nextProps, this.props) || !Utils.isEqualReact(nextState, this.state);
   }
 

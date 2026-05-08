@@ -37,7 +37,7 @@ class MailImportantIcon extends React.Component<MailImportantIconProps, MailImpo
   unsubscribe?: () => void;
   subscription?: Disposable;
 
-  constructor(props) {
+  constructor(props: MailImportantIconProps) {
     super(props);
     this.state = this.getState();
   }
@@ -66,8 +66,7 @@ class MailImportantIcon extends React.Component<MailImportantIconProps, MailImpo
       visible = category != null;
     }
 
-    const isImportant =
-      category && _.findWhere(props.thread.labels, { id: category.id } as Partial<Label>) != null;
+    const isImportant = category && props.thread.labels?.find((x) => x.id === category.id) != null;
 
     return { visible, category, isImportant };
   };
@@ -82,7 +81,10 @@ class MailImportantIcon extends React.Component<MailImportantIconProps, MailImpo
   }
 
   componentDidUpdate(prevProps: MailImportantIconProps) {
-    if (prevProps.thread !== this.props.thread || prevProps.showIfAvailableForAnyAccount !== this.props.showIfAvailableForAnyAccount) {
+    if (
+      prevProps.thread !== this.props.thread ||
+      prevProps.showIfAvailableForAnyAccount !== this.props.showIfAvailableForAnyAccount
+    ) {
       this.setState(this.getState());
     }
   }
@@ -96,7 +98,7 @@ class MailImportantIcon extends React.Component<MailImportantIconProps, MailImpo
     }
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps: MailImportantIconProps, nextState: MailImportantIconState) {
     return !_.isEqual(nextState, this.state);
   }
 
@@ -123,12 +125,11 @@ class MailImportantIcon extends React.Component<MailImportantIconProps, MailImpo
     return <div className={classes} title={title} onClick={this._onToggleImportant} />;
   }
 
-  _onToggleImportant = event => {
+  _onToggleImportant = (event: React.MouseEvent) => {
     const { category } = this.state;
 
     if (category) {
-      const isImportant =
-        _.findWhere(this.props.thread.labels, { id: category.id } as Partial<Label>) != null;
+      const isImportant = this.props.thread.labels?.find((x) => x.id === category.id) != null;
 
       if (!isImportant) {
         Actions.queueTask(

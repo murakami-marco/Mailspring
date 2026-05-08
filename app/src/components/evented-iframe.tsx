@@ -66,7 +66,10 @@ export class EventedIFrame extends React.Component<
     if (this.props.searchable) {
       this._regionId = Utils.generateTempId();
       this._searchUsub = SearchableComponentStore.listen(this._onSearchableStoreChange);
-      SearchableComponentStore.registerSearchRegion(this._regionId, ReactDOM.findDOMNode(this));
+      SearchableComponentStore.registerSearchRegion(
+        this._regionId,
+        ReactDOM.findDOMNode(this) as HTMLElement
+      );
     }
     this._subscribeToIFrameEvents();
   }
@@ -81,11 +84,17 @@ export class EventedIFrame extends React.Component<
 
   componentDidUpdate() {
     if (this.props.searchable) {
-      SearchableComponentStore.registerSearchRegion(this._regionId, ReactDOM.findDOMNode(this));
+      SearchableComponentStore.registerSearchRegion(
+        this._regionId,
+        ReactDOM.findDOMNode(this) as HTMLElement
+      );
     }
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(
+    nextProps: EventedIFrameProps & React.HTMLProps<HTMLIFrameElement>,
+    nextState: Record<string, unknown>
+  ) {
     return !Utils.isEqualReact(nextProps, this.props) || !Utils.isEqualReact(nextState, this.state);
   }
 
@@ -98,7 +107,7 @@ export class EventedIFrame extends React.Component<
     this._subscribeToIFrameEvents();
   }
 
-  setHeightQuietly(height) {
+  setHeightQuietly(height: number) {
     const el = ReactDOM.findDOMNode(this) as HTMLIFrameElement;
     if (el.style.height !== `${height}px`) {
       el.style.height = `${height}px`;
@@ -167,9 +176,9 @@ export class EventedIFrame extends React.Component<
     });
   }
 
-  _getContainingTarget(event, options) {
-    let { target } = event;
-    while (target != null && target !== document && target !== window) {
+  _getContainingTarget(event: MouseEvent, options: { with: string }): HTMLElement | null {
+    let target = event.target as HTMLElement | null;
+    while (target != null && target !== (document as unknown) && target !== (window as unknown)) {
       if (target.getAttribute(options.with) != null) {
         return target;
       }
@@ -178,19 +187,19 @@ export class EventedIFrame extends React.Component<
     return null;
   }
 
-  _onIFrameBlur = event => {
+  _onIFrameBlur = (event) => {
     const node = ReactDOM.findDOMNode(this) as HTMLIFrameElement;
     node.contentWindow.getSelection().empty();
   };
 
-  _onIFrameFocus = event => {
+  _onIFrameFocus = (event) => {
     window.getSelection().empty();
   };
 
   // The iFrame captures events that take place over it, which causes some
   // interesting behaviors. For example, when you drag and release over the
   // iFrame, the mouseup never fires in the parent window.
-  _onIFrameClick = e => {
+  _onIFrameClick = (e) => {
     e.stopPropagation();
     const target = this._getContainingTarget(e, { with: 'href' });
     if (target) {
@@ -222,7 +231,7 @@ export class EventedIFrame extends React.Component<
       // just following the link directly
       if (rawHref.startsWith(rootURLForServer('identity'))) {
         const path = rawHref.split(rootURLForServer('identity')).pop();
-        IdentityStore.fetchSingleSignOnURL(path, { source: 'SingleSignOnEmail' }).then(href => {
+        IdentityStore.fetchSingleSignOnURL(path, { source: 'SingleSignOnEmail' }).then((href) => {
           AppEnv.windowEventHandler.openLink({ href, metaKey: e.metaKey });
         });
         return;
@@ -239,11 +248,11 @@ export class EventedIFrame extends React.Component<
     }
   };
 
-  _isBlacklistedHref(href) {
+  _isBlacklistedHref(href: string) {
     return new RegExp(/^file:/i).test(href);
   }
 
-  _onIFrameMouseEvent = event => {
+  _onIFrameMouseEvent = (event) => {
     const node = ReactDOM.findDOMNode(this) as HTMLIFrameElement;
     const nodeRect = node.getBoundingClientRect();
 
@@ -267,7 +276,7 @@ export class EventedIFrame extends React.Component<
     );
   };
 
-  _onIFrameKeyEvent = event => {
+  _onIFrameKeyEvent = (event) => {
     if (event.metaKey || event.altKey || event.ctrlKey) {
       return;
     }
@@ -294,7 +303,7 @@ export class EventedIFrame extends React.Component<
     ReactDOM.findDOMNode(this).dispatchEvent(eventInParentDoc);
   };
 
-  _onIFrameContextualMenu = event => {
+  _onIFrameContextualMenu = (event) => {
     // Build a standard-looking contextual menu with options like "Copy Link",
     // "Copy Image" and "Search Google for 'Bla'"
     event.preventDefault();
@@ -322,7 +331,7 @@ export class EventedIFrame extends React.Component<
             click() {
               navigator.clipboard
                 .writeText(href.split('mailto:').pop())
-                .catch(err => console.error('Failed to copy to clipboard:', err));
+                .catch((err) => console.error('Failed to copy to clipboard:', err));
             },
           })
         );
@@ -341,7 +350,7 @@ export class EventedIFrame extends React.Component<
             click() {
               navigator.clipboard
                 .writeText(href)
-                .catch(err => console.error('Failed to copy to clipboard:', err));
+                .catch((err) => console.error('Failed to copy to clipboard:', err));
             },
           })
         );
@@ -358,16 +367,16 @@ export class EventedIFrame extends React.Component<
         new MenuItem({
           label: localized('Save Image') + '...',
           click() {
-            AppEnv.showSaveDialog({ defaultPath: srcFilename }, function(path) {
+            AppEnv.showSaveDialog({ defaultPath: srcFilename }, function (path) {
               if (!path) {
                 return;
               }
               const oReq = new XMLHttpRequest();
               oReq.open('GET', src, true);
               oReq.responseType = 'arraybuffer';
-              oReq.onload = function() {
+              oReq.onload = function () {
                 const buffer = Buffer.from(new Uint8Array(oReq.response));
-                fs.writeFile(path, buffer, err => {
+                fs.writeFile(path, buffer, (err) => {
                   require('@electron/remote').shell.showItemInFolder(path);
                 });
               };
@@ -383,11 +392,11 @@ export class EventedIFrame extends React.Component<
             const img = new Image();
             img.addEventListener(
               'load',
-              function() {
+              function () {
                 const canvas = document.createElement('canvas');
                 canvas.width = img.width;
                 canvas.height = img.height;
-                canvas.getContext('2d').drawImage(imageTarget, 0, 0);
+                canvas.getContext('2d').drawImage(imageTarget as HTMLImageElement, 0, 0);
                 const imageDataURL = canvas.toDataURL('image/png');
                 ipcRenderer.send('write-image-to-clipboard', imageDataURL);
               },
@@ -402,15 +411,15 @@ export class EventedIFrame extends React.Component<
 
     // Menu actions for text
     let text = '';
-    const selection = (ReactDOM.findDOMNode(
-      this
-    ) as HTMLIFrameElement).contentDocument.getSelection();
+    const selection = (
+      ReactDOM.findDOMNode(this) as HTMLIFrameElement
+    ).contentDocument.getSelection();
     if (selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
       text = range.toString();
     }
     if (!text || text.length === 0) {
-      text = (linkTarget != null ? linkTarget : event.target).innerText;
+      text = (linkTarget != null ? linkTarget : (event.target as HTMLElement)).innerText;
     }
     text = text.trim();
 
@@ -427,7 +436,7 @@ export class EventedIFrame extends React.Component<
           click() {
             navigator.clipboard
               .writeText(text)
-              .catch(err => console.error('Failed to copy to clipboard:', err));
+              .catch((err) => console.error('Failed to copy to clipboard:', err));
           },
         })
       );

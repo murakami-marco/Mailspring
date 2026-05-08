@@ -6,8 +6,7 @@ import path from 'path';
 
 import { EventedIFrame } from 'mailspring-component-kit';
 import Package from '../../../src/package';
-import LessCompileCache from '../../../src/less-compile-cache';
-import _ from 'underscore';
+import LessCompileCache from '../../../src/compile-cache-less';
 
 interface ThemeOptionProps {
   theme: Package;
@@ -34,10 +33,12 @@ class ThemeOption extends React.Component<ThemeOptionProps> {
   }
 
   _getImportPaths() {
-    return _.uniq([
-      this.props.theme.getStylesheetsPath(),
-      AppEnv.themes.getBaseTheme().getStylesheetsPath(),
-    ]);
+    return [
+      ...new Set([
+        this.props.theme.getStylesheetsPath(),
+        AppEnv.themes.getBaseTheme().getStylesheetsPath(),
+      ]),
+    ];
   }
 
   _loadStylesheet(stylesheetPath) {
@@ -103,7 +104,7 @@ class ThemeOption extends React.Component<ThemeOptionProps> {
     return (
       <div className="clickable-theme-option" onMouseDown={this.props.onSelect}>
         <EventedIFrame
-          ref={cm => {
+          ref={(cm) => {
             this._iframeComponent = cm;
           }}
           className={toSelector(this.props.theme.name)}

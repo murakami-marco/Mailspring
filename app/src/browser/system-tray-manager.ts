@@ -3,7 +3,7 @@ import { Tray, Menu, nativeImage, nativeTheme } from 'electron';
 import { localized } from '../intl';
 import Application from './application';
 
-function _getMenuTemplate(platform, application) {
+function _getMenuTemplate(platform: string, application: Application) {
   const template = [
     {
       label: localized('New Message'),
@@ -32,11 +32,11 @@ function _getMenuTemplate(platform, application) {
   return template;
 }
 
-function _getTooltip(unreadString) {
+function _getTooltip(unreadString: string) {
   return unreadString ? `${unreadString} unread messages` : '';
 }
 
-function _getIcon(iconPath) {
+function _getIcon(iconPath: string) {
   if (!iconPath) {
     return nativeImage.createEmpty();
   }
@@ -50,7 +50,7 @@ class SystemTrayManager {
   _platform: string = null;
   _application: Application;
 
-  constructor(platform, application) {
+  constructor(platform: string, application: Application) {
     this._platform = platform;
     this._application = application;
     this.initTray();
@@ -116,12 +116,12 @@ class SystemTrayManager {
         this._application.emit('application:show-main-window');
       } else {
         const visibleWindows = this._application.windowManager.getVisibleWindows();
-        visibleWindows.forEach(window => window.hide());
+        visibleWindows.forEach((window) => window.hide());
       }
     }
   };
 
-  updateTraySettings(iconPath, unreadString) {
+  updateTraySettings(iconPath: string, unreadString: string) {
     if (this._iconPath !== iconPath) {
       this._iconPath = iconPath;
       if (this._tray) this._tray.setImage(_getIcon(this._iconPath));

@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { PropTypes, Utils } from 'mailspring-exports';
@@ -128,7 +127,7 @@ export class ResizableRegion extends React.Component<
     handle: ResizableHandle.Right,
   };
 
-  constructor(props) {
+  constructor(props: ResizableRegionProps & React.HTMLProps<HTMLDivElement>) {
     super(props);
 
     this.state = {
@@ -141,11 +140,12 @@ export class ResizableRegion extends React.Component<
   render() {
     let containerStyle;
     if (this.props.handle.axis === 'horizontal') {
-      containerStyle = _.extend({}, this.props.style, {
+      containerStyle = {
+        ...this.props.style,
         minWidth: this.props.minWidth,
         maxWidth: this.props.maxWidth,
         position: 'relative',
-      });
+      };
 
       if (this.state.width != null) {
         containerStyle.width = this.state.width;
@@ -153,12 +153,13 @@ export class ResizableRegion extends React.Component<
         containerStyle.flex = 1;
       }
     } else {
-      containerStyle = _.extend({}, this.props.style, {
+      containerStyle = {
+        ...this.props.style,
         minHeight: this.props.minHeight,
         maxHeight: this.props.maxHeight,
         position: 'relative',
         width: '100%',
-      });
+      };
 
       if (this.state.height != null) {
         containerStyle.height = this.state.height;
@@ -204,7 +205,7 @@ export class ResizableRegion extends React.Component<
     }
   }
 
-  _mouseDown = event => {
+  _mouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0) {
       return;
     }
@@ -217,7 +218,7 @@ export class ResizableRegion extends React.Component<
     event.preventDefault();
   };
 
-  _mouseUp = event => {
+  _mouseUp = (event: MouseEvent) => {
     if (event.button !== 0) {
       return;
     }
@@ -231,7 +232,7 @@ export class ResizableRegion extends React.Component<
     event.preventDefault();
   };
 
-  _mouseMove = event => {
+  _mouseMove = (event: MouseEvent) => {
     if (!this.state.dragging) {
       return;
     }

@@ -19,7 +19,7 @@ const _observableForThreadMessages = (id, initialModels) => {
   return Rx.Observable.fromNamedQuerySubscription(`message-${id}`, subscription);
 };
 
-const _flatMapJoiningMessages = $threadsResultSet => {
+const _flatMapJoiningMessages = ($threadsResultSet) => {
   // DatabaseView leverages `QuerySubscription` for threads /and/ for the
   // messages on each thread, which are passed to out as `thread.__messages`.
   let $messagesResultSets = {};
@@ -31,13 +31,13 @@ const _flatMapJoiningMessages = $threadsResultSet => {
   //    ~80msec faster than making 100 queries for 100 new thread ids separately.)
   return (
     $threadsResultSet
-      .flatMapLatest(threadsResultSet => {
-        const missingIds = threadsResultSet.ids().filter(id => !$messagesResultSets[id]);
+      .flatMapLatest((threadsResultSet) => {
+        const missingIds = threadsResultSet.ids().filter((id) => !$messagesResultSets[id]);
         if (missingIds.length === 0) {
           return Rx.Observable.just([threadsResultSet, []]);
         }
         const promise = DatabaseStore.findAll<Message>(Message, { threadId: missingIds }).then(
-          messages => {
+          (messages) => {
             return [threadsResultSet, messages];
           }
         );
@@ -59,7 +59,7 @@ const _flatMapJoiningMessages = $threadsResultSet => {
         const oldSets = $messagesResultSets;
         $messagesResultSets = {};
 
-        const sets = threadsResultSet.ids().map(id => {
+        const sets = threadsResultSet.ids().map((id) => {
           $messagesResultSets[id] =
             oldSets[id] || _observableForThreadMessages(id, messagesGrouped[id]);
           return $messagesResultSets[id];
@@ -76,7 +76,7 @@ const _flatMapJoiningMessages = $threadsResultSet => {
         threadsResultSet.models().forEach((thread, idx) => {
           const clone = new Thread(thread) as any;
           clone.__messages = messagesResultSets[idx] ? messagesResultSets[idx].models() : [];
-          clone.__messages = clone.__messages.filter(m => !m.isHidden());
+          clone.__messages = clone.__messages.filter((m) => !m.isHidden());
           threadsWithMessages[clone.id] = clone;
         });
 

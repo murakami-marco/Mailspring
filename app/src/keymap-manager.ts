@@ -34,11 +34,15 @@ mousetrap.prototype.stopCallback = (e, element, combo) => {
   if (e.isPropagationStopped()) {
     return true;
   }
+  // Also treat anything inside an open composer as text input so that focus
+  // landing on composer chrome (footer, attachment area, between recipient
+  // chips, etc.) doesn't let plain keys fall through to global shortcuts.
   const withinTextInput =
     element.tagName === 'INPUT' ||
     element.tagName === 'SELECT' ||
     element.tagName === 'TEXTAREA' ||
-    element.isContentEditable;
+    element.isContentEditable ||
+    !!element.closest('.composer-outer-wrap');
   if (withinTextInput) {
     const isPlainKey = !/(mod|command|ctrl)/.test(combo);
     const isReservedTextEditingShortcut = /(mod|command|ctrl)\+(a|x|c|v|left|right)/.test(combo);
@@ -68,7 +72,7 @@ class KeymapFile {
   _path: string;
   _manager: KeymapManager;
 
-  constructor(manager, filePath) {
+  constructor(manager: KeymapManager, filePath: string) {
     this._manager = manager;
     this._path = filePath;
   }
@@ -86,7 +90,7 @@ class KeymapFile {
     }
 
     this._bindings = {};
-    Object.keys(keymaps).forEach(command => {
+    Object.keys(keymaps).forEach((command) => {
       let keystrokesArray = keymaps[command];
       if (!(keystrokesArray instanceof Array)) {
         keystrokesArray = [keystrokesArray];
@@ -218,18 +222,18 @@ export default class KeymapManager {
     }
   };
 
-  loadKeymap(filePath) {
+  loadKeymap(filePath: string) {
     const file = new KeymapFile(this, filePath);
     this._files.push(file);
     file.load();
 
     return new Disposable(() => {
-      this._files = this._files.filter(f => f !== file);
+      this._files = this._files.filter((f) => f !== file);
       this.keymapCacheInvalidated();
     });
   }
 
-  ensureKeystrokesRegistered(keystrokes) {
+  ensureKeystrokesRegistered(keystrokes: string) {
     if (this._registered[keystrokes]) {
       return;
     }
@@ -279,7 +283,7 @@ export default class KeymapManager {
     this._emitter.emit('on-did-reload-keymap');
   }
 
-  onDidReloadKeymap = callback => {
+  onDidReloadKeymap = (callback: () => void) => {
     return this._emitter.on('on-did-reload-keymap', callback);
   };
 
@@ -287,7 +291,7 @@ export default class KeymapManager {
     return this._bindingsCache;
   }
 
-  getBindingsForCommand(command) {
+  getBindingsForCommand(command: string) {
     return this._bindingsCache[command] || [];
   }
 }
