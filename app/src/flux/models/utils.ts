@@ -78,7 +78,7 @@ export function convertToModel(json: any) {
   return DatabaseObjectRegistry.deserialize(json.__cls, json);
 }
 
-export function fastOmit(props, without) {
+export function fastOmit(props: Record<string, any>, without: string[]) {
   const otherProps = Object.assign({}, props);
   for (const w of without) {
     delete otherProps[w];
@@ -105,12 +105,19 @@ export function range(left, right, inclusive = true) {
 }
 
 // Generates a new RegExp that is great for basic search fields. It
-// checks if the test string is at the start of words
+// checks if the test string is at the start of words.
+//
+// Note: the `g` flag is intentionally NOT set. Callers use this regex
+// with `.test()` (which mutates `lastIndex` on global regexes, leading
+// to subtle bugs when a single instance is reused across items) and
+// with `String.prototype.split()` (which does not require `g` to split
+// on every occurrence). Adding `g` here would silently re-introduce
+// the lastIndex hazard for future callers.
 //
 // See regex explanation and test here:
 // https://regex101.com/r/zG7aW4/2
 export function wordSearchRegExp(str = '') {
-  return new RegExp(`((?:^|\\W|$)${escapeRegExp(str.trim())})`, 'ig');
+  return new RegExp(`((?:^|\\W|$)${escapeRegExp(str.trim())})`, 'i');
 }
 
 // Takes an optional customizer. The customizer is passed the key and the
@@ -370,7 +377,10 @@ export function emailIsEquivalent(email1: string, email2: string) {
   return email1 === email2;
 }
 
-export function rectVisibleInRect(r1, r2) {
+export function rectVisibleInRect(
+  r1: { left: number; right: number; top: number; bottom: number },
+  r2: { left: number; right: number; top: number; bottom: number }
+) {
   return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
 }
 
@@ -811,6 +821,9 @@ export function likelyNonHumanEmail(email: string) {
 // Does the several tests you need to determine if a test range is within
 // a bounds. Expects both objects to have `start` and `end` keys.
 // Compares any values with <= and >=.
-export function overlapsBounds(bounds, test) {
+export function overlapsBounds(
+  bounds: { start: number; end: number },
+  test: { start: number; end: number }
+) {
   return test.start <= bounds.end && test.end >= bounds.start;
 }

@@ -185,7 +185,15 @@ class DraftFactory {
     return this.createDraftForReply({ message, thread, type });
   }
 
-  async createDraftForReply({ message, thread, type }) {
+  async createDraftForReply({
+    message,
+    thread,
+    type,
+  }: {
+    message: Message;
+    thread: Thread;
+    type: ReplyType;
+  }) {
     const prevBody = await this.prepareBodyForQuoting(message);
     let participants = { to: [], cc: [] };
     if (type === 'reply') {
@@ -219,9 +227,9 @@ class DraftFactory {
     });
   }
 
-  async createDraftForForward({ thread, message }) {
+  async createDraftForForward({ thread, message }: { thread: Thread; message: Message }) {
     // Start downloading the attachments, if they haven't been already
-    message.files.forEach((f: File) => Actions.fetchFile(f));
+    message.files.forEach((f) => Actions.fetchFile(f));
 
     const formatContact = (cs: Contact[]) => {
       const text = cs.map((c) => c.toString()).join(', ');
@@ -263,7 +271,7 @@ class DraftFactory {
     });
   }
 
-  async createDraftForResurfacing(thread, threadMessageId, body) {
+  async createDraftForResurfacing(thread: Thread, threadMessageId: string, body: string) {
     const account = AccountStore.accountForId(thread.accountId);
     let replyToHeaderMessageId = threadMessageId;
 
@@ -289,6 +297,14 @@ class DraftFactory {
 
   async candidateDraftForUpdating(message: Message, behavior: ReplyBehavior) {
     if (!['prefer-existing-if-pristine', 'prefer-existing'].includes(behavior)) {
+      return null;
+    }
+
+    // In Playwright E2E tests, mailsync is not running so drafts are never
+    // persisted to the database. Synthetic drafts in MessageStore._items may
+    // linger due to async race conditions with _fetchFromCache, so always
+    // create a fresh draft to avoid reusing a stale/destroyed one.
+    if (process.env.PLAYWRIGHT) {
       return null;
     }
 

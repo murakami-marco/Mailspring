@@ -1,19 +1,14 @@
 import React from 'react';
-import { localized, PropTypes } from 'mailspring-exports';
+import { localized } from 'mailspring-exports';
 import Templates from './templates';
 
 export default class SignatureTemplatePicker extends React.Component<{
   resolvedData: any;
   onChange: (e: { target: { id: string; value: string } }) => void;
 }> {
-  static propTypes = {
-    resolvedData: PropTypes.object,
-    onChange: PropTypes.func,
-  };
-
   _el: HTMLElement;
 
-  _onClickItem = (event) => {
+  _onClickItem = (event: React.MouseEvent<HTMLDivElement>) => {
     const value = event.currentTarget.dataset.value;
     this.props.onChange({ target: { id: 'templateName', value } });
   };

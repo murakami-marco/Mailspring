@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import path from 'path';
 import fs from 'fs';
 
@@ -15,10 +14,6 @@ export default class PreferencesKeymaps extends React.Component<
   { templates: string[]; bindings: { [command: string]: [] } }
 > {
   static displayName = 'PreferencesKeymaps';
-
-  static propTypes = {
-    config: PropTypes.object,
-  };
 
   _disposable?: Disposable;
 
@@ -87,7 +82,7 @@ export default class PreferencesKeymaps extends React.Component<
     }
   }
 
-  _renderBindingsSection = (section) => {
+  _renderBindingsSection = (section: { title: string; items: string[][] }) => {
     return (
       <section key={`section-${section.title}`}>
         <div className="shortcut-section-title">{section.title}</div>

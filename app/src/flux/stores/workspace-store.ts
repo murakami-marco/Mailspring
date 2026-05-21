@@ -142,7 +142,7 @@ class WorkspaceStore extends MailspringStore {
   Inbound Events
   */
 
-  _onSelectRootSheet = (sheet) => {
+  _onSelectRootSheet = (sheet: SheetDeclaration) => {
     if (!sheet) {
       throw new Error(`Actions.selectRootSheet - ${sheet} is not a valid sheet.`);
     }
@@ -283,7 +283,7 @@ class WorkspaceStore extends MailspringStore {
 
   // Public: Returns a {Boolean} indicating whether the location provided is hidden.
   // You should provide one of the WorkspaceStore.Location constant values.
-  isLocationHidden(loc: {id: string} | null) {
+  isLocationHidden(loc: { id: string } | null) {
     if (!loc) {
       return false;
     }
@@ -353,7 +353,7 @@ class WorkspaceStore extends MailspringStore {
   //
   // * `sheet` The {Sheet} type to push onto the stack.
   //
-  pushSheet = (sheet) => {
+  pushSheet = (sheet: SheetDeclaration) => {
     this._sheetStack.push(sheet);
     this.trigger();
   };

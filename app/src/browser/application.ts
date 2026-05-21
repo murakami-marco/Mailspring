@@ -142,13 +142,13 @@ export default class Application extends EventEmitter {
       initializeInBackground: initializeInBackground,
     });
     this.systemTrayManager = new SystemTrayManager(process.platform, this);
-    // this.systemAccentWatcher = new SystemAccentWatcher();
-    // this.systemAccentWatcher.on('change', (color) => {
-    //   this.windowManager.sendToAllWindows('system-accent-color-changed', {}, color);
-    // });
-    // this.systemAccentWatcher.on('dark-mode-change', (darkMode) => {
-    //   this.windowManager.sendToAllWindows('system-dark-mode-changed', {}, darkMode);
-    // });
+    this.systemAccentWatcher = new SystemAccentWatcher();
+    this.systemAccentWatcher.on('change', (color: string) => {
+      this.windowManager.sendToAllWindows('system-accent-color-changed', {}, color);
+    });
+    this.systemAccentWatcher.on('dark-mode-change', (darkMode: boolean) => {
+      this.windowManager.sendToAllWindows('system-dark-mode-changed', {}, darkMode);
+    });
     if (process.platform === 'win32') {
       this.windowsTaskbarManager = new WindowsTaskbarManager(this);
     }
@@ -272,7 +272,7 @@ export default class Application extends EventEmitter {
   // exit and then delete the file. It's hard to tell when this happens, so we just
   // retry the deletion a few times.
   deleteFileWithRetry(filePath, callback = () => {}, retries = 5) {
-    const callbackWithRetry = (err) => {
+    const callbackWithRetry = (err: NodeJS.ErrnoException | null) => {
       if (err && err.message.indexOf('no such file') === -1) {
         console.log(`File Error: ${err.message} - retrying in 150msec`);
         setTimeout(() => {
@@ -611,7 +611,7 @@ export default class Application extends EventEmitter {
 
     // Synchronous because ThemeManager needs the value during its constructor to
     // pick the initial ui-light / ui-dark variant without a flash.
-    ipcMain.on('get-system-dark-mode-sync', (event) => {
+    ipcMain.on('get-system-dark-mode-sync', (event: Electron.IpcMainEvent) => {
       event.returnValue = this.systemAccentWatcher ? this.systemAccentWatcher.getDarkMode() : false;
     });
 
@@ -835,9 +835,21 @@ export default class Application extends EventEmitter {
         // correctly to error reporting tools like Sentry/Raven.
         const message =
           errorParams && typeof errorParams === 'object' ? errorParams.message : undefined;
+        const stack =
+          errorParams && typeof errorParams === 'object' ? errorParams.stack : undefined;
+
+        // Drop reports with neither a message nor a stack: they would surface
+        // in Sentry as "Unknown error" with only this IPC handler frame,
+        // which is unactionable. The renderer wraps inputs before sending so
+        // this is defense-in-depth for any path that bypasses that wrapping.
+        if (!message && !stack) {
+          event.returnValue = true;
+          return;
+        }
+
         const err = new Error(message || undefined);
-        if (errorParams && typeof errorParams === 'object' && errorParams.stack) {
-          err.stack = errorParams.stack;
+        if (stack) {
+          err.stack = stack;
         }
         Object.assign(err, errorParams);
         global.errorLogger.reportError(err, extra);

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import { ListensToFluxStore, RetinaImg, KeyCommandsRegion } from 'mailspring-component-kit';
 import {
   localized,
@@ -46,12 +45,6 @@ interface ThreadSearchBarState {
 
 class ThreadSearchBar extends Component<ThreadSearchBarProps, ThreadSearchBarState> {
   static displayName = 'ThreadSearchBar';
-
-  static propTypes = {
-    query: PropTypes.string,
-    isSearching: PropTypes.bool,
-    perspective: PropTypes.object,
-  };
 
   _fieldEl: TokenizingContenteditable;
 
@@ -120,7 +113,7 @@ class ThreadSearchBar extends Component<ThreadSearchBarProps, ThreadSearchBarSta
 
       if (suggestions.length && suggestions[0].token === token) {
         const { termSuggestions } = suggestions[0];
-        const textToSuggestion = (term) => ({
+        const textToSuggestion = (term: string) => ({
           term: wrapInQuotes(term),
           description: term.includes(' ') ? wrapInQuotes(term) : term,
           token,

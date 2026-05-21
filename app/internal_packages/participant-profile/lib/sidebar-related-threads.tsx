@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   localized,
-  PropTypes,
   Actions,
   DateUtils,
   Contact,
@@ -39,7 +38,7 @@ export default class RelatedThreads extends React.Component<
     this._mounted = false;
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: { contact: Contact }) {
     if (emailFor(prevProps.contact) !== emailFor(this.props.contact)) {
       this.setState({ threads: [] });
       this.fetchThreads();
@@ -79,10 +78,6 @@ class RelatedThreadsWithData extends React.Component<{
   threads: Thread[];
 }> {
   static displayName = 'RelatedThreadsWithData';
-
-  static propTypes = {
-    threads: PropTypes.array,
-  };
 
   state = { expanded: false };
 

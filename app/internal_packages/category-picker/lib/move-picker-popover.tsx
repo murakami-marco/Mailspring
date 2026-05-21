@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import { Menu, RetinaImg, LabelColorizer, BoldedSearchResult } from 'mailspring-component-kit';
 import {
   Utils,
@@ -8,6 +7,7 @@ import {
   TaskQueue,
   Thread,
   Account,
+  Category,
   CategoryStore,
   Folder,
   SyncbackCategoryTask,
@@ -32,11 +32,6 @@ export default class MovePickerPopover extends Component<
   MovePickerPopoverProps,
   MovePickerPopoverState
 > {
-  static propTypes = {
-    threads: PropTypes.array.isRequired,
-    account: PropTypes.object.isRequired,
-  };
-
   _standardFolders = [];
   _userCategories = [];
   disposables: Rx.Disposable[];
@@ -91,6 +86,8 @@ export default class MovePickerPopover extends Component<
       hidden.push('all');
     }
 
+    // Compile the search regex once and reuse it across the .filter below.
+    const searchRe = Utils.wordSearchRegExp(searchValue);
     const categoryData = []
       .concat(this._standardFolders)
       .concat([{ divider: true, id: 'category-divider' }])
@@ -100,7 +97,7 @@ export default class MovePickerPopover extends Component<
           // remove categories that are part of the current perspective or locked
           !hidden.includes(cat.role) && !currentCategoryIds.includes(cat.id)
       )
-      .filter((cat) => Utils.wordSearchRegExp(searchValue).test(cat.displayName))
+      .filter((cat) => searchRe.test(cat.displayName))
       .map((cat) => {
         if (cat.divider) {
           return cat;
@@ -124,7 +121,7 @@ export default class MovePickerPopover extends Component<
     return { categoryData, searchValue };
   };
 
-  _onCategoriesChanged = (categories) => {
+  _onCategoriesChanged = (categories: Category[]) => {
     this._standardFolders = categories.filter((c) => c.role && c instanceof Folder);
     this._userCategories = categories.filter((c) => !c.role || !(c instanceof Folder));
     // Use functional setState to preserve any pending searchValue updates from user typing
@@ -137,7 +134,7 @@ export default class MovePickerPopover extends Component<
     Actions.closePopover();
   };
 
-  _onSelectCategory = (item) => {
+  _onSelectCategory = (item: CategoryData) => {
     if (this.props.threads.length === 0) {
       return;
     }
@@ -167,7 +164,7 @@ export default class MovePickerPopover extends Component<
     Actions.queueTask(syncbackTask);
   };
 
-  _onMoveToCategory = ({ category }) => {
+  _onMoveToCategory = ({ category }: CategoryData) => {
     const { threads } = this.props;
 
     if (category instanceof Folder) {
@@ -193,15 +190,15 @@ export default class MovePickerPopover extends Component<
     }
   };
 
-  _onCompleteAutosuggest = (item) => {
+  _onCompleteAutosuggest = (item: CategoryData) => {
     this.setState(this._recalculateState(this.props, { searchValue: item.displayName }));
   };
 
-  _onSearchValueChange = (event) => {
+  _onSearchValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState(this._recalculateState(this.props, { searchValue: event.target.value }));
   };
 
-  _renderCreateNewItem = ({ searchValue }) => {
+  _renderCreateNewItem = ({ searchValue }: CategoryData) => {
     const icon =
       CategoryStore.getInboxCategory(this.props.account) instanceof Folder ? 'folder' : 'tag';
 
@@ -219,7 +216,7 @@ export default class MovePickerPopover extends Component<
     );
   };
 
-  _renderItem = (item) => {
+  _renderItem = (item: CategoryData) => {
     if (item.divider) {
       return <Menu.Item key={item.id} divider={item.divider} />;
     } else if (item.newCategoryItem) {

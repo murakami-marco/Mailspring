@@ -7,7 +7,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {
-  PropTypes,
   Utils,
   localized,
   IdentityStore,
@@ -49,17 +48,14 @@ export class EventedIFrame extends React.Component<
 > {
   static displayName = 'EventedIFrame';
 
-  static propTypes = {
-    searchable: PropTypes.bool,
-    onResize: PropTypes.func,
-  };
+  static ownPropKeys = ['searchable', 'onResize'];
 
   _regionId: string;
   _searchUsub: () => void;
 
   render() {
-    const otherProps = Utils.fastOmit(this.props, Object.keys(EventedIFrame.propTypes));
-    return <iframe title="iframe" seamless="seamless" {...otherProps} />;
+    const otherProps = Utils.fastOmit(this.props, EventedIFrame.ownPropKeys);
+    return <iframe title="iframe" seamless {...otherProps} />;
   }
 
   componentDidMount() {
@@ -187,19 +183,19 @@ export class EventedIFrame extends React.Component<
     return null;
   }
 
-  _onIFrameBlur = (event) => {
+  _onIFrameBlur = (_event: FocusEvent) => {
     const node = ReactDOM.findDOMNode(this) as HTMLIFrameElement;
     node.contentWindow.getSelection().empty();
   };
 
-  _onIFrameFocus = (event) => {
+  _onIFrameFocus = (_event: FocusEvent) => {
     window.getSelection().empty();
   };
 
   // The iFrame captures events that take place over it, which causes some
   // interesting behaviors. For example, when you drag and release over the
   // iFrame, the mouseup never fires in the parent window.
-  _onIFrameClick = (e) => {
+  _onIFrameClick = (e: MouseEvent) => {
     e.stopPropagation();
     const target = this._getContainingTarget(e, { with: 'href' });
     if (target) {
@@ -252,7 +248,7 @@ export class EventedIFrame extends React.Component<
     return new RegExp(/^file:/i).test(href);
   }
 
-  _onIFrameMouseEvent = (event) => {
+  _onIFrameMouseEvent = (event: MouseEvent) => {
     const node = ReactDOM.findDOMNode(this) as HTMLIFrameElement;
     const nodeRect = node.getBoundingClientRect();
 
@@ -276,7 +272,7 @@ export class EventedIFrame extends React.Component<
     );
   };
 
-  _onIFrameKeyEvent = (event) => {
+  _onIFrameKeyEvent = (event: KeyboardEvent) => {
     if (event.metaKey || event.altKey || event.ctrlKey) {
       return;
     }
@@ -303,7 +299,7 @@ export class EventedIFrame extends React.Component<
     ReactDOM.findDOMNode(this).dispatchEvent(eventInParentDoc);
   };
 
-  _onIFrameContextualMenu = (event) => {
+  _onIFrameContextualMenu = (event: MouseEvent) => {
     // Build a standard-looking contextual menu with options like "Copy Link",
     // "Copy Image" and "Search Google for 'Bla'"
     event.preventDefault();
@@ -367,21 +363,24 @@ export class EventedIFrame extends React.Component<
         new MenuItem({
           label: localized('Save Image') + '...',
           click() {
-            AppEnv.showSaveDialog({ defaultPath: srcFilename }, function (path) {
-              if (!path) {
-                return;
+            AppEnv.showSaveDialog(
+              { defaultPath: srcFilename },
+              function (path: string | undefined) {
+                if (!path) {
+                  return;
+                }
+                const oReq = new XMLHttpRequest();
+                oReq.open('GET', src, true);
+                oReq.responseType = 'arraybuffer';
+                oReq.onload = function () {
+                  const buffer = Buffer.from(new Uint8Array(oReq.response));
+                  fs.writeFile(path, buffer, (err) => {
+                    require('@electron/remote').shell.showItemInFolder(path);
+                  });
+                };
+                oReq.send();
               }
-              const oReq = new XMLHttpRequest();
-              oReq.open('GET', src, true);
-              oReq.responseType = 'arraybuffer';
-              oReq.onload = function () {
-                const buffer = Buffer.from(new Uint8Array(oReq.response));
-                fs.writeFile(path, buffer, (err) => {
-                  require('@electron/remote').shell.showItemInFolder(path);
-                });
-              };
-              oReq.send();
-            });
+            );
           },
         })
       );

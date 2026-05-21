@@ -48,7 +48,7 @@ export default class ThemeManager {
 
   private _systemAccentColor: string | null = null;
   private _systemAccentDisposable: Disposable | null = null;
-  private _systemDarkMode: boolean = false;
+  private _systemDarkMode = false;
 
   constructor({ packageManager, resourcePath, configDirPath, safeMode }) {
     this.packageManager = packageManager;
@@ -126,7 +126,7 @@ export default class ThemeManager {
 
   reloadCoreStyles() {
     console.log('Reloading /static and /internal_packages to incorporate LESS changes');
-    const reloadStylesIn = (folder) => {
+    const reloadStylesIn = (folder: string) => {
       (fs.readdirSync(folder, { recursive: true }) as string[])
         .map((f) => path.join(folder, f))
         .filter((stylePath) => stylePath.endsWith('.less'))
