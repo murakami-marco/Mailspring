@@ -6,6 +6,11 @@
         "ui-light"
       ],
       "disabledPackages": [
+        "activity",
+        "participant-profile",
+        "link-tracking",
+        "open-tracking",
+        "thread-sharing",
         "message-view-on-github",
         "personal-level-indicators",
         "phishing-detection",
